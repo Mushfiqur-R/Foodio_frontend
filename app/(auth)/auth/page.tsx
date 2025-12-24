@@ -257,13 +257,22 @@ export default function AuthPage() {
       // Role-based redirect
       const userRole = response.data.user.role.toLowerCase();
       
-      if (userRole === 'admin') {
+      // if (userRole === 'admin') {
+      //   // Admin → Admin Dashboard
+      //   router.push('/admin/Dashboard');
+      // } else {
+      //   // User/Customer → Customer Dashboard
+      //   router.push('/customer/dashboard');
+      // }
+
+        if (userRole === 'admin') {
         // Admin → Admin Dashboard
-        router.push('/admin/Dashboard');
-      } else {
-        // User/Customer → Customer Dashboard
-        router.push('/customer/dashboard');
-      }
+        router.push('/admin/MenuItems');
+      } 
+      // else {
+      //   // User/Customer → Customer Dashboard
+      //   router.push('/customer/dashboard');
+      // }
 
     } catch (error: any) {
       if (error instanceof z.ZodError) {

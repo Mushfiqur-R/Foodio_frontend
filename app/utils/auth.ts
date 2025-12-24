@@ -82,11 +82,13 @@ export const redirectByRole = (): string => {
   const role = getUserRole();
   
   if (role?.toLowerCase() === 'admin') {
-    return '/admin/Dashboard';
+    // return '/admin/Dashboard';
+    return '/admin/MenuItems'
   } else {
-    return '/customer/dashboard';
+    return '/auth';
   }
 };
+
 
 /**
  * Check if user has access to admin routes

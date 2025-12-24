@@ -19,12 +19,12 @@ export default function AdminSidebar() {
     {
       name: 'Menu Items',
       icon: '☰',
-      path: '/admin/menu-items',
+      path: '/admin/MenuItems',
     },
     {
       name: 'Orders',
       icon: '📦',
-      path: '/admin/orders',
+      path: '/admin/Order',
     },
   ];
 
@@ -37,20 +37,26 @@ export default function AdminSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3">
-        {navItems.map((item) => (
-          <button
-            key={item.path}
-            onClick={() => router.push(item.path)}
-            className={`w-full flex items-center gap-2 px-4 py-2.5 rounded-lg mb-1 text-sm font-medium transition ${
-              pathname === item.path
-                ? 'bg-[#1A3C34] text-white'
-                : 'text-white hover:bg-[#1A3C34]'
-            }`}
-          >
-            <span className="text-base">{item.icon}</span>
-            {item.name}
-          </button>
-        ))}
+        {navItems.map((item) => {
+          // Check if current path matches or if it's the base /admin path (default to MenuItems)
+          const isActive = pathname === item.path || 
+                          (pathname === '/admin' && item.path === '/admin/MenuItems');
+          
+          return (
+            <button
+              key={item.path}
+              onClick={() => router.push(item.path)}
+              className={`w-full flex items-center gap-2 px-4 py-2.5 rounded-lg mb-1 text-sm font-medium transition ${
+                isActive
+                  ? 'bg-[#1A3C34] text-white'                    // Selected: Green bg, white text
+                  : 'text-[#7A7A7A] hover:bg-[#1A3C34] hover:text-white'  // Not selected: Gray text, hover to green
+              }`}
+            >
+              <span className="text-base">{item.icon}</span>
+              {item.name}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Sign Out */}

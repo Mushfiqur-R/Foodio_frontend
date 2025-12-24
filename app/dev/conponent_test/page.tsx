@@ -58,6 +58,7 @@ import FoodItemCard from '@/components/ItemCart';
 import { useState, useEffect } from 'react';
 import Navigation from "@/components/Navigation";
 import AdminSidebar from "@/components/AdminSIdebar";
+import AddCatagory from "@/components/AddCategoryModal";
 
 // Example type for food items from database
 type FoodItem = {
@@ -132,7 +133,7 @@ export default function MenuPage() {
   return (
 <>
  
-   <AdminSidebar/>
+
   </>
 
   );

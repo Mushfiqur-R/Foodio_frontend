@@ -17,8 +17,8 @@ const Navigation = ({ className }: NavigationProps) => {
   // Hard-coded navigation links without using href
   const links = [
     { name: 'Home', route: '/' },
-    { name: 'Food Menus', route: '/menu' },
-    { name: 'My Orders', route: '/orders' },
+    { name: 'Food Menus', route: '/customer/FoodMenu' },
+    { name: 'My Orders', route: '/auth' },
   ];
 
   const handleNavigation = (name: string, route: string) => {

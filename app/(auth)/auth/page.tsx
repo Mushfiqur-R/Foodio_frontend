@@ -273,6 +273,9 @@ export default function AuthPage() {
       //   // User/Customer → Customer Dashboard
       //   router.push('/customer/dashboard');
       // }
+      if(userRole==='user'){
+        router.push('/customer/Dashboard');
+      }
 
     } catch (error: any) {
       if (error instanceof z.ZodError) {

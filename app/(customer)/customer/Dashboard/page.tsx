@@ -10,8 +10,9 @@ import Navigation from "@/components/Navigation";
 import ItemCart from '@/components/ItemCart';
 import Button from '@/components/Button';
 import { ChefHat, UtensilsCrossed, Cake } from 'lucide-react';
+import NavigationAfterLogin from '@/components/NavigationAfterLogin';
 
-export default function HomePage() {
+export default function Dashboard() {
   // Sample food items data - replace with actual API data
   const foodItems = [
     {
@@ -68,7 +69,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
       {/* Navigation */}
-      <Navigation/>
+    
 
       {/* Hero Section */}
       <section className="relative w-full min-h-[650px] bg-gradient-to-br from-[#F8F6F1] to-[#FEF7EA] overflow-hidden">

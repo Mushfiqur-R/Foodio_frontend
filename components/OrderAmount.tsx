@@ -60,7 +60,9 @@ export default function OrderDetailsCart({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-40 z-40"
+        // className="fixed inset-0 bg-black  bg-opacity-40 z-40"
+        className="fixed inset-0 bg-white/30 backdrop-blur-md z-40"
+
         onClick={handleCancel}
       />
 

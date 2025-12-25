@@ -1,68 +1,85 @@
 'use client';
-if (typeof window === "undefined") {
-  console.log("SERVER");
-} else {
-  console.log("CLIENT");
-}
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Navigation from "@/components/Navigation";
 import ItemCart from '@/components/ItemCart';
 import Button from '@/components/Button';
 import { ChefHat, UtensilsCrossed, Cake } from 'lucide-react';
+import axios from 'axios';
+
+type MenuItem = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+};
 
 export default function HomePage() {
-  // Sample food items data - replace with actual API data
-  const foodItems = [
-    {
-      id: '1',
-      name: 'Golden Crunch Bites',
-      description: 'Jumbo scallops with cauliflower purée and truffle oil.',
-      price: 15.0,
-      imageUrl: '/images/golden_crunch_bite.png',
-    },
-    {
-      id: '2',
-      name: 'Mediterranean Olive Medley',
-      description: 'Jumbo scallops with cauliflower purée and truffle oil.',
-      price: 25.0,
-      imageUrl: '/images/golden_crunch_bite.png',
-    },
-    {
-      id: '3',
-      name: 'Citrus Swirl Delights',
-      description: 'Jumbo scallops with cauliflower purée and truffle oil.',
-      price: 35.0,
-      imageUrl: '/images/golden_crunch_bite.png',
-    },
-    {
-      id: '4',
-      name: 'Creamy Garlic Shrimp Pasta',
-      description: 'Jumbo scallops with cauliflower purée and truffle oil.',
-      price: 10.0,
-      imageUrl: '/images/golden_crunch_bite.png',
-    },
-  ];
+  const [foodItems, setFoodItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
+  // Fetch menu items from API
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('http://localhost:3000/user/menu');
+        
+        console.log('📦 API Response:', response.data);
+        
+        // Backend data ke frontend format এ convert করো
+        const formattedItems = response.data.map((item: any) => {
+          const fullImageUrl = item.imageUrl 
+            ? `http://localhost:3000${item.imageUrl}` 
+            : '/images/golden_crunch_bite.png';
+          
+          return {
+            id: parseInt(item.id),
+            name: item.name,
+            description: item.description || 'Delicious item from our menu',
+            price: parseFloat(item.price),
+            imageUrl: fullImageUrl,
+          };
+        });
+        
+        console.log('✨ Formatted Items:', formattedItems);
+        
+        
+        setFoodItems(formattedItems.slice(0, 5));
+        
+      } catch (error) {
+        console.error('❌ Error fetching menu items:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
   const categories = [
     { name: 'Starters', icon: ChefHat },
     { name: 'Main Courses', icon: UtensilsCrossed },
     { name: 'Desserts', icon: Cake },
   ];
 
-  const handleAddToOrder = (itemId: string, itemName: string) => {
-    console.log(`Added ${itemName} to order`);
+  const handleAddToOrder = (itemId: number, itemName: string) => {
+    
+    router.push('/auth');
     // Add your cart logic here
   };
 
   const handleOrderNow = () => {
     console.log('Order Now clicked');
     // Navigate to menu or order page
+     router.push('/auth');
   };
 
   const handleViewMenu = () => {
     console.log('View Menu clicked');
-    // Navigate to menu page
+     router.push('/customer/FoodMenu')
   };
 
   return (

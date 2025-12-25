@@ -5,6 +5,7 @@ import FoodItemCard from '@/components/ItemCart';
 import OrderAmount from '@/components/OrderAmount';
 import axios from 'axios';
 import SuccessToast from '@/components/SuccessToster';
+import Navigation from '@/components/Navigation';
 
 type MenuItem = {
   id: number;
@@ -134,7 +135,10 @@ export default function FoodMenu() {
   };
 
   return (
+    <>
+     <Navigation/>
     <div className="min-h-screen bg-white py-16 px-8">
+        
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -254,5 +258,6 @@ export default function FoodMenu() {
         autoCloseDelay={3000}
       />
     </div>
+    </>
   );
 }

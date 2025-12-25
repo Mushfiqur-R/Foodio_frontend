@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import OrderPlaceCart from '@/components/OrderPlaceCartl'; 
+import OrderPlaceCart from '@/components/OrderPlaceCartl';
+import axios from 'axios';
+import { getAuthToken } from '@/app/utils/auth'; // তোমার auth utility file
 
 type Order = {
   orderId: string;
@@ -18,46 +20,71 @@ type Order = {
 };
 
 export default function MyOrders() {
-  // Sample orders data - replace with your actual data fetching logic
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      orderId: '5b331ea1',
-      placedDate: 'December 12th, 2025',
-      placedTime: '4:33 PM',
-      items: [
-        { quantity: 1, name: 'Golden Crunch Bites', price: 24.0 }
-      ],
-      deliveryAddress: 'House-23, Road-23, Jamaica, USA',
-      totalAmount: 24.0,
-      status: 'PENDING'
-    },
-    {
-      orderId: '5b331ea2',
-      placedDate: 'December 12th, 2025',
-      placedTime: '4:33 PM',
-      items: [
-        { quantity: 1, name: 'Mediterranean Olive Medley', price: 24.0 }
-      ],
-      deliveryAddress: 'House-23, Road-23, Jamaica, USA',
-      totalAmount: 24.0,
-      status: 'COMPLETED'
-    },
-    {
-      orderId: '5b331ea3',
-      placedDate: 'December 10th, 2025',
-      placedTime: '2:15 PM',
-      items: [
-        { quantity: 2, name: 'Spicy Chicken Wings', price: 15.5 },
-        { quantity: 1, name: 'Caesar Salad', price: 12.0 }
-      ],
-      deliveryAddress: 'House-23, Road-23, Jamaica, USA',
-      totalAmount: 43.0,
-      status: 'READY'
-    }
-  ]);
-
-  // Optional: Filter functionality
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
+
+  // Fetch orders on component mount
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      try {
+        const token = getAuthToken();
+        
+        if (!token) {
+          console.error('No token found');
+          return;
+        }
+
+        const response = await axios.get('http://localhost:3000/user/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        // Backend data কে frontend format এ convert
+        const formattedOrders: Order[] = response.data.map((order: any) => {
+          // Date formatting
+          const orderDate = new Date(order.createdAt);
+          const placedDate = orderDate.toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+          });
+          const placedTime = orderDate.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: true 
+          });
+
+          // Items mapping
+          const items = order.orderItems.map((item: any) => ({
+            quantity: item.quantity,
+            name: item.menuItem.name,
+            price: parseFloat(item.price)
+          }));
+
+          return {
+            orderId: order.id.toString(),
+            placedDate,
+            placedTime,
+            items,
+            deliveryAddress: order.user.address,
+            totalAmount: parseFloat(order.totalPrice),
+            status: order.status
+          };
+        });
+
+        setOrders(formattedOrders);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   const filteredOrders = filterStatus === 'ALL' 
     ? orders 

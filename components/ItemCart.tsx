@@ -58,7 +58,7 @@ export default function FoodItemCard({
           zIndex: 10,
         }}
       >
-        <div className="relative w-full h-full">
+        {/* <div className="relative w-full h-full object-cover">
           <Image
             src={imageSrc}
             alt={imageAlt}
@@ -67,7 +67,12 @@ export default function FoodItemCard({
             style={{ borderRadius: '100px' }}
             sizes="222px"
           />
-        </div>
+        </div> */}
+        <img
+          src={imageSrc}
+          alt={imageAlt}
+          className="w-full h-full object-cover"
+        />
       </div>
 
       {/* Content Container */}
@@ -114,3 +119,4 @@ export default function FoodItemCard({
     </div>
   );
 }
+

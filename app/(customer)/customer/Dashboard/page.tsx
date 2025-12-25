@@ -1,76 +1,184 @@
 'use client';
-if (typeof window === "undefined") {
-  console.log("SERVER");
-} else {
-  console.log("CLIENT");
-}
 
-import { useState } from 'react';
-import Navigation from "@/components/Navigation";
-import ItemCart from '@/components/ItemCart';
+import { useState, useEffect } from 'react';
 import Button from '@/components/Button';
 import { ChefHat, UtensilsCrossed, Cake } from 'lucide-react';
-import NavigationAfterLogin from '@/components/NavigationAfterLogin';
+import ItemCart from '@/components/ItemCart';
+import axios from 'axios';
+import SuccessToast from '@/components/SuccessToster';
+import OrderAmount from '@/components/OrderAmount';
+import { useRouter } from 'next/navigation';
+
+type MenuItem = {
+  id: number;
+  imageSrc: string;
+  imageAlt: string;
+  itemName: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+};
+
+type OrderData = {
+  menuItemId: number;
+  quantity: number;
+};
+
+type SelectedMenuItem = {
+  menuItemId: number;
+  name: string;
+  price: number;
+};
 
 export default function Dashboard() {
-  // Sample food items data - replace with actual API data
-  const foodItems = [
-    {
-      id: '1',
-      name: 'Golden Crunch Bites',
-      description: 'Jumbo scallops with cauliflower purée and truffle oil.',
-      price: 15.0,
-      imageUrl: '/images/golden_crunch_bite.png',
-    },
-    {
-      id: '2',
-      name: 'Mediterranean Olive Medley',
-      description: 'Jumbo scallops with cauliflower purée and truffle oil.',
-      price: 25.0,
-      imageUrl: '/images/golden_crunch_bite.png',
-    },
-    {
-      id: '3',
-      name: 'Citrus Swirl Delights',
-      description: 'Jumbo scallops with cauliflower purée and truffle oil.',
-      price: 35.0,
-      imageUrl: '/images/golden_crunch_bite.png',
-    },
-    {
-      id: '4',
-      name: 'Creamy Garlic Shrimp Pasta',
-      description: 'Jumbo scallops with cauliflower purée and truffle oil.',
-      price: 10.0,
-      imageUrl: '/images/golden_crunch_bite.png',
-    },
-  ];
+  const [foodItems, setFoodItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<SelectedMenuItem | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successItemName, setSuccessItemName] = useState('');
 
+  const router = useRouter();
+
+  // Categories
   const categories = [
     { name: 'Starters', icon: ChefHat },
     { name: 'Main Courses', icon: UtensilsCrossed },
     { name: 'Desserts', icon: Cake },
   ];
 
-  const handleAddToOrder = (itemId: string, itemName: string) => {
-    console.log(`Added ${itemName} to order`);
-    // Add your cart logic here
+  // Fetch menu items from API
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('http://localhost:3000/user/menu');
+        
+        console.log('📦 API Response:', response.data);
+        
+        // Backend data ke frontend format এ convert করো
+        const formattedItems = response.data.map((item: any) => {
+          const fullImageUrl = item.imageUrl 
+            ? `http://localhost:3000${item.imageUrl}` 
+            : '/images/golden_crunch_bite.png';
+          
+          console.log(`Item ID: ${item.id}, Type: ${typeof item.id}`);
+          
+          return {
+            id: parseInt(item.id), // ✅ Ensure it's a number
+            imageSrc: fullImageUrl,
+            imageAlt: item.name,
+            itemName: item.name,
+            description: item.description || 'Delicious item from our menu',
+            price: parseFloat(item.price),
+            imageUrl: fullImageUrl,
+          };
+        });
+        
+        console.log('✨ Formatted Items:', formattedItems);
+        
+        setFoodItems(formattedItems.slice(0, 4));
+      } catch (error) {
+        console.error('❌ Error fetching menu items:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
+
+  // Handle "Add to Order" button click
+  const handleAddToOrder = (itemId: number, itemName: string, price: number) => {
+    console.log('🎯 Add to Order clicked:', { itemId, itemName, price });
+    console.log('Type of itemId:', typeof itemId);
+    
+    setSelectedItem({
+      menuItemId: itemId, // Already a number
+      name: itemName,
+      price: price,
+    });
+    setIsModalOpen(true);
+  };
+
+  // Handle confirm from OrderAmount modal - Place order
+  const handleConfirmOrder = async (orderData: OrderData) => {
+    try {
+      console.log('📦 Order Data received:', orderData);
+      console.log('menuItemId type:', typeof orderData.menuItemId);
+      console.log('quantity type:', typeof orderData.quantity);
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Please login to place an order');
+        window.location.href = '/auth';
+        return;
+      }
+
+      // Ensure data types are correct
+      const payload = {
+        menuItemId: Number(orderData.menuItemId), // ✅ Explicit conversion
+        quantity: Number(orderData.quantity),     // ✅ Explicit conversion
+      };
+
+      console.log('📤 Sending payload:', payload);
+      console.log('Payload types:', {
+        menuItemId: typeof payload.menuItemId,
+        quantity: typeof payload.quantity,
+      });
+
+      // Place order API call
+      const response = await axios.post(
+        'http://localhost:3000/user/placeorder',
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
+      console.log('✅ Order placed successfully:', response.data);
+
+      // Show success toast
+      setSuccessItemName(selectedItem?.name || 'Item');
+      setShowSuccessToast(true);
+
+    } catch (error: any) {
+      console.error('❌ Error placing order:', error);
+      
+      if (axios.isAxiosError(error)) {
+        console.error('Response data:', error.response?.data);
+        console.error('Response status:', error.response?.status);
+        
+        if (error.response?.status === 401) {
+          alert('Session expired. Please login again.');
+          window.location.href = '/auth';
+        } else if (error.response?.status === 400) {
+          alert(`Validation error: ${JSON.stringify(error.response?.data?.message || error.response?.data)}`);
+        } else {
+          alert(`Failed to place order: ${error.response?.data?.message || 'Unknown error'}`);
+        }
+      } else {
+        alert('Failed to place order. Please try again.');
+      }
+    }
   };
 
   const handleOrderNow = () => {
-    console.log('Order Now clicked');
-    // Navigate to menu or order page
+    router.push('/customer/FoodMenu');
   };
 
   const handleViewMenu = () => {
-    console.log('View Menu clicked');
-    // Navigate to menu page
+    router.push('/customer/FoodMenu');
   };
+
 
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
-      {/* Navigation */}
-    
-
       {/* Hero Section */}
       <section className="relative w-full min-h-[650px] bg-gradient-to-br from-[#F8F6F1] to-[#FEF7EA] overflow-hidden">
         <div className="max-w-[1400px] mx-auto px-8 py-12 flex items-center justify-between gap-12">
@@ -124,7 +232,7 @@ export default function Dashboard() {
             </div>
           </div>
 
- 
+          {/* Right Image */}
           <div className="relative flex-shrink-0" style={{ width: '608px', height: '565px' }}>
             {/* Background Frame with bottom-left radius */}
             <div
@@ -196,22 +304,60 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Food Items Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-20 justify-items-center">
-          {foodItems.map((item) => (
-            <ItemCart
-              key={item.id}
-              imageSrc={item.imageUrl}
-              imageAlt={item.name}
-              itemName={item.name}
-              description={item.description}
-              price={item.price}
-              onAddToOrder={() => handleAddToOrder(item.id, item.name)}
-            />
-          ))}
-        </div>
-      </section>
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#1A3C34] border-r-transparent"></div>
+            <p className="text-[#666666] mt-4">Loading items...</p>
+          </div>
+        )}
 
+        {/* Food Items Grid */}
+        {!loading && foodItems.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-20 justify-items-center">
+            {foodItems.map((item) => (
+              <ItemCart
+                key={item.id}
+                imageSrc={item.imageUrl}
+                imageAlt={item.itemName}
+                itemName={item.itemName}
+                description={item.description}
+                price={item.price}
+                onAddToOrder={() => handleAddToOrder(item.id, item.itemName, item.price)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && foodItems.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-[#666666] text-lg">No items available at the moment</p>
+          </div>
+        )}
+      </section>
+   
+      {selectedItem && (
+             <OrderAmount
+               isOpen={isModalOpen}
+               onClose={() => {
+                 setIsModalOpen(false);
+                 setSelectedItem(null);
+               }}
+               menuItem={selectedItem}
+               onConfirm={handleConfirmOrder}
+             />
+             
+           )}
+            
+            
+            <SuccessToast
+             isOpen={showSuccessToast}
+             onClose={() => setShowSuccessToast(false)}
+             itemName={successItemName}
+             autoClose={true}
+             autoCloseDelay={3000}
+           />
       {/* Footer Spacing */}
       <div className="h-20"></div>
     </div>
